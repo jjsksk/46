@@ -4,8 +4,9 @@
 let video;
 let handPose;
 let hands = [];
-let circleX, circleY, circleRadius = 50; // 圓心座標與半徑
+let starX, starY, starRadius = 50; // 星形的中心座標與半徑
 let isDragging = false;
+let trails = []; // 用於存儲滑落軌跡
 
 function preload() {
   // Initialize HandPose model with flipped video input
@@ -25,59 +26,53 @@ function setup() {
   video = createCapture(VIDEO, { flipped: true });
   video.hide();
 
-  // 初始化圓的位置
-  circleX = width / 2;
-  circleY = height / 2;
+  // 初始化星形的位置
+  starX = width / 2;
+  starY = height / 2;
 
   // Start detecting hands
   handPose.detectStart(video, gotHands);
 }
 
 function draw() {
+  background(0); // 清除畫布，設為黑色背景
   image(video, 0, 0);
 
-  // 繪製圓
-  fill(0, 0, 255);
-  noStroke();
-  circle(circleX, circleY, circleRadius * 2);
+  // 繪製滑落軌跡
+  for (let i = trails.length - 1; i >= 0; i--) {
+    let trail = trails[i];
+    fill(255, 255, 0, trail.alpha); // 使用透明度繪製
+    noStroke();
+    drawStar(trail.x, trail.y, starRadius, starRadius / 2, 5);
+    trail.alpha -= 2; // 每次減少透明度
+    if (trail.alpha <= 0) {
+      trails.splice(i, 1); // 移除透明度為0的軌跡
+    }
+  }
 
-  // Ensure at least one hand is detected
+  // 繪製星形
+  fill(255, 255, 0);
+  noStroke();
+  drawStar(starX, starY, starRadius, starRadius / 2, 5);
+
+  // 確保至少檢測到一隻手
   if (hands.length > 0) {
     for (let hand of hands) {
       if (hand.confidence > 0.1) {
-        // Loop through keypoints and draw circles
-        for (let i = 0; i < hand.keypoints.length; i++) {
-          let keypoint = hand.keypoints[i];
-
-          // Color-code based on left or right hand
-          if (hand.handedness == "Left") {
-            fill(255, 0, 255);
-          } else {
-            fill(255, 255, 0);
-          }
-
-          noStroke();
-          circle(keypoint.x, keypoint.y, 16);
-        }
-
-        // Draw lines connecting keypoints
-        drawLines(hand.keypoints, [0, 1, 2, 3, 4]);  // Thumb
-        drawLines(hand.keypoints, [5, 6, 7, 8]);     // Index finger
-        drawLines(hand.keypoints, [9, 10, 11, 12]);  // Middle finger
-        drawLines(hand.keypoints, [13, 14, 15, 16]); // Ring finger
-        drawLines(hand.keypoints, [17, 18, 19, 20]); // Pinky finger
-
-        // 檢查食指是否觸碰圓
+        // 檢查食指是否觸碰星形
         let indexFinger = hand.keypoints[8]; // 食指的關鍵點
-        let d = dist(indexFinger.x, indexFinger.y, circleX, circleY);
-        if (d < circleRadius) {
+        let d = dist(indexFinger.x, indexFinger.y, starX, starY);
+        if (d < starRadius) {
           isDragging = true; // 開始拖曳
         }
 
-        // 如果正在拖曳，讓圓跟隨食指移動
+        // 如果正在拖曳，讓星形跟隨食指移動
         if (isDragging) {
-          circleX = indexFinger.x;
-          circleY = indexFinger.y;
+          starX = indexFinger.x;
+          starY = indexFinger.y;
+
+          // 添加滑落軌跡
+          trails.push({ x: starX, y: starY, alpha: 255 });
         }
       }
     }
@@ -86,12 +81,18 @@ function draw() {
   }
 }
 
-function drawLines(keypoints, indices) {
-  for (let i = 0; i < indices.length - 1; i++) {
-    let start = keypoints[indices[i]];
-    let end = keypoints[indices[i + 1]];
-    stroke(0, 255, 0); // 設定線條顏色
-    strokeWeight(2);   // 設定線條粗細
-    line(start.x, start.y, end.x, end.y);
+// 繪製星形的函式
+function drawStar(x, y, radius1, radius2, npoints) {
+  let angle = TWO_PI / npoints;
+  let halfAngle = angle / 2.0;
+  beginShape();
+  for (let a = 0; a < TWO_PI; a += angle) {
+    let sx = x + cos(a) * radius1;
+    let sy = y + sin(a) * radius1;
+    vertex(sx, sy);
+    sx = x + cos(a + halfAngle) * radius2;
+    sy = y + sin(a + halfAngle) * radius2;
+    vertex(sx, sy);
   }
+  endShape(CLOSE);
 }
