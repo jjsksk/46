@@ -81,6 +81,15 @@ function draw() {
           starX = indexFinger.x;
           starY = indexFinger.y;
         }
+
+        // 繪製手指的線條
+        for (let i = 0; i < hand.keypoints.length - 1; i++) {
+          let start = hand.keypoints[i];
+          let end = hand.keypoints[i + 1];
+          stroke(0, 255, 0, 200); // 綠色線條，帶透明度
+          strokeWeight(2);
+          line(start.x, start.y, end.x, end.y);
+        }
       }
     }
   } else {
