@@ -41,9 +41,20 @@ function draw() {
   // 繪製滑落軌跡
   for (let i = trails.length - 1; i >= 0; i--) {
     let trail = trails[i];
-    stroke(255, 255, 0, trail.alpha); // 使用透明度繪製線條
+
+    // 繪製三條細線
+    stroke(255, 255, 0, trail.alpha); // 第一條線，正常透明度
     strokeWeight(2);
     line(trail.x1, trail.y1, trail.x2, trail.y2);
+
+    stroke(255, 255, 0, trail.alpha * 0.7); // 第二條線，稍微透明
+    strokeWeight(1);
+    line(trail.x1 - 2, trail.y1 - 2, trail.x2 - 2, trail.y2 - 2);
+
+    stroke(255, 255, 0, 30); // 第三條線，薄紗效果
+    strokeWeight(4);
+    line(trail.x1 + 2, trail.y1 + 2, trail.x2 + 2, trail.y2 + 2);
+
     trail.alpha -= 2; // 每次減少透明度
     if (trail.alpha <= 0) {
       trails.splice(i, 1); // 移除透明度為0的軌跡
