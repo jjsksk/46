@@ -41,9 +41,9 @@ function draw() {
   // 繪製滑落軌跡
   for (let i = trails.length - 1; i >= 0; i--) {
     let trail = trails[i];
-    fill(255, 255, 0, trail.alpha); // 使用透明度繪製
-    noStroke();
-    drawStar(trail.x, trail.y, starRadius, starRadius / 2, 5);
+    stroke(255, 255, 0, trail.alpha); // 使用透明度繪製線條
+    strokeWeight(2);
+    line(trail.x1, trail.y1, trail.x2, trail.y2);
     trail.alpha -= 2; // 每次減少透明度
     if (trail.alpha <= 0) {
       trails.splice(i, 1); // 移除透明度為0的軌跡
@@ -68,11 +68,18 @@ function draw() {
 
         // 如果正在拖曳，讓星形跟隨食指移動
         if (isDragging) {
+          // 添加滑落軌跡
+          trails.push({
+            x1: starX,
+            y1: starY,
+            x2: indexFinger.x,
+            y2: indexFinger.y,
+            alpha: 255,
+          });
+
+          // 更新星形位置
           starX = indexFinger.x;
           starY = indexFinger.y;
-
-          // 添加滑落軌跡
-          trails.push({ x: starX, y: starY, alpha: 255 });
         }
       }
     }
